@@ -46,9 +46,7 @@
 
         <button id="connectBtn" class="glow-btn w-full mt-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
             <i class="fa-solid fa-wallet"></i> 连接 TronLink 钱包
-        </button>
-
-        <div id="walletPanel" class="hidden mt-6 space-y-4">
+        </button><div id="walletPanel" class="hidden mt-6 space-y-4">
             <div class="bg-dark/50 rounded-2xl p-5 border border-white/5">
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-gray-400 text-sm">我的地址</span>
@@ -63,8 +61,9 @@
                 <div class="flex justify-between items-center mt-2 pt-2 border-t border-white/5">
                     <span class="text-gray-400 text-sm whitespace-nowrap mr-2">TRX 余额</span>
                     <span class="text-white font-mono text-sm" id="trxBalance">0 TRX</span>
-            <div class="bg-dark/50 rounded-2xl p-5 border border-white/5 relative">
-                <h3 class="text-white font-semibold mb-3 flex items-center justify-between">
+                </div>
+            </div><div class="bg-dark/50 rounded-2xl p-5 border border-white/5 relative">
+                <h3 class="text-white font-semibold mb-3 flex items-center justify-between flex-wrap gap-2">
                     <span class="flex items-center gap-2"><i class="fa-solid fa-arrows-rotate text-gold"></i> 兑换 (Swap)</span>
                     <span class="text-xs text-gray-500 cursor-pointer hover:text-gold transition" id="slippageBtn">设置滑点 ⚙️</span>
                 </h3>
@@ -109,10 +108,7 @@
                 <a href="https://tronscan.org/#/contract/TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6" target="_blank" class="text-gold text-[10px] hover:underline ml-1">🔍 验证</a>
             </div>
             <p class="text-gray-500 text-[10px] leading-relaxed">
-                本页面为官网唯一网址，请确保您访问的是官方唯一网址：<br>
-                <a href="https://wangzheguilai26.github.io/wangzheguilai/" target="_blank" class="text-gold font-bold hover:underline mt-1 inline-block">
-                    🔗 点击访问官方 DApp
-                </a><br>
+                本页面为开源社区前端，请确保您访问的是官方唯一网址。<br>
                 谨防钓鱼网站，任何人向你索要私钥都是诈骗！
             </p>
             <p class="text-gray-600 text-[10px] mt-2">&copy; 2026 王者归来 (WZGL) Ecosystem. All rights reserved.</p>
@@ -133,8 +129,6 @@
 
     <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 translate-y-[-100px] bg-green-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg transition-all duration-300 z-50 flex items-center gap-2">
         <i class="fa-solid fa-circle-check"></i> <span id="toastMsg">操作成功</span>
-    </div>
-
-    <script src="app.js"></script>
+    </div><script src="app.js"></script>
 </body>
 </html>
