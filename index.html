@@ -7,147 +7,131 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tronweb/6.0.0/tronweb.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        gold: '#FFD700',
-                        dark: '#0B0E14',
-                        card: '#151A25',
-                        accent: '#8A2BE2',
-                    },
-                    fontFamily: {
-                        orbit: ['Orbitron', 'sans-serif'],
-                        inter }
-: ['Inter', 'sans-serif'],
-                    }
-                       }
-            }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { gold: '#FFD700', dark: '#0B0E14', card: '#151A25', accent: '#8A2BE2' }, fontFamily: { orbit: ['Orbitron', 'sans-serif'], inter: ['Inter', 'sans-serif'] } } } }
     </script>
     <style>
         body {
             background-color: #0B0E14;
             background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.15), transparent 25%),
                               radial-gradient(circle at 85% 30%, rgba(255, 215, 0, 0.1), transparent 25%);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow-x: hidden;
+            background-size: 200% 200%; animation: gradientMove 15s ease infinite; color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow-x: hidden;
         }
-        .glass-card {
-            background: rgba(21, 26, 37, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-        .glow-text {
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3);
-        }
-        .glow-btn {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #0B0E14;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-        .glow-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
-        }
-        .glow-btn:disabled {
-            background: #333;
-            color: #666;
-            box-shadow: none;
-            transform: none;
-            cursor: not-allowed;
-        }
-        .input-field {
-            background: rgba(11, 14, 20, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .input-field:focus {
-            outline: none;
-            border-color: #FFD700;
-            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
-        }
+        @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .glass-card { background: rgba(21, 26, 37, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1); transition: all 0.4s ease; }
+        .glass-card:hover { border-color: rgba(255, 215, 0, 0.3); box-shadow: 0 0 30px rgba(255, 215, 0, 0.1); }
+        .glow-text { text-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.4); }
+        .glow-btn { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #0B0E14; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); transition: all 0.3s ease; }
+        .glow-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5); }
+        .input-field { background: rgba(11, 14, 20, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
+        .input-field:focus { outline: none; border-color: #FFD700; box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2); }
     </style>
 </head><body class="font-inter p-4">
-
     <div class="w-full max-w-md glass-card p-6 md:p-8 relative overflow-hidden">
-        <!-- 装饰背景 -->
         <div class="absolute -top-20 -right-20 w-40 h-40 bg-gold rounded-full filter blur-[80px] opacity-20"></div>
         <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-accent rounded-full filter blur-[80px] opacity-20"></div>
 
-        <!-- 头部区域 -->
         <div class="text-center relative z-10">
             <div class="w-16 h-16 mx-auto bg-gradient-to-br from-gold to-orange-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-gold/20">
                 <i class="fa-solid fa-crown text-3xl text-dark"></i>
             </div>
-            <h1 class="font-orbit text-3xl font-bold text-gold glow-text tracking-wider">王者归来</h1>
+            <h1 class="font-orbit text-4xl font-bold text-gold glow-text tracking-wider">王者归来</h1>
             <p class="text-gray-400 text-sm mt-1 tracking-widest">WZGL TOKEN</p>
-            <div class="mt-2 bg-black/30 border border-white/10 rounded-lg p-2 flex items-center justify-center gap-2 cursor-pointer hover:bg-black/50 transition" id="copyContract" title="点击复制合约地址">
-                <span class="text-gray-400 text-xs">合约: </span>
-                <span class="text-gold font-mono text-xs">TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6</span>
-                <i class="fa-regular fa-copy text-gold text-xs"></i>
-            </div>
             <div class="mt-3 inline-flex items-center bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1">
                 <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
                 <span class="text-green-500 text-xs font-semibold">TRON Mainnet</span>
             </div>
-        </div><!-- 连接钱包按钮 -->
+        </div>
+
         <button id="connectBtn" class="glow-btn w-full mt-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
             <i class="fa-solid fa-wallet"></i> 连接 TronLink 钱包
         </button>
 
-        <!-- 钱包信息面板 -->
         <div id="walletPanel" class="hidden mt-6 space-y-4">
-            <div class="bg-dark/50 rounded-2xl p-4 border border-white/5">
-                <div class="flex justify-between items-center mb-2">
+            <div class="bg-dark/50 rounded-2xl p-5 border border-white/5">
+                <div class="flex justify-between items-center mb-3">
                     <span class="text-gray-400 text-sm">我的地址</span>
-                    <span class="text-white text-sm font-mono bg-white/10 px-2 py-0.5 rounded cursor-pointer hover:bg-white/20 transition" id="copyAddress" title="点击复制">
+                    <span class="text-white text-sm font-mono bg-white/10 px-2 py-1 rounded cursor-pointer hover:bg-white/20 transition" id="copyAddress" title="点击复制">
                         <span id="walletAddress">--</span> <i class="fa-regular fa-copy ml-1"></i>
                     </span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-gray-400 text-sm">我的余额</span>
-                    <span class="text-gold font-orbit text-xl font-bold glow-text" id="walletBalance">0 WZGL</span>
+                    <span class="text-gray-400 text-sm">WZGL 余额</span>
+ items                   -center <span class="text-gold font mt-orbit text-2xl font-bold glow-text" id="walletBalance">0 WZGL</span>
                 </div>
-            </div><!-- 转账功能区 -->
-            <div class="bg-dark/50 rounded-2xl p-5 border border-white/5 mt-4">
-                <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-paper-plane text-gold"></i> 转账 WZGL
+                <div class="flex justify-between-2 pt-2 border-t border-white/5">
+                    <span class="text-gray-400 text-sm">TRX 余额</span>
+                    <span class="text-white font-mono text-sm" id="trxBalance">0 TRX</span>
+                </div>
+            </div><div class="bg-dark/50 rounded-2xl p-5 border border-white/5 relative">
+                <h3 class="text-white font-semibold mb-3 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-arrows-rotate text-gold"></i> 兑换 (Swap)</span>
+                    <span class="text-xs text-gray-500 cursor-pointer hover:text-gold transition" id="slippageBtn">设置滑点 ⚙️</span>
                 </h3>
-                <div class="space-y-3">
-                    <input type="text" id="toAddress" placeholder="接收方地址 (T开头)" class="input-field w-full px-4 py-3 rounded-xl text-sm">
-                    <input type="number" id="amount" placeholder="转账数量" class="input-field w-full px-4 py-3 rounded-xl text-sm">
-                    <button id="transferBtn" class="w-full py-3 mt-2 rounded-xl font-bold text-dark bg-gold hover:bg-yellow-400 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                        确认转账
-                    </button>
+                
+                <div id="slippagePanel" class="hidden absolute top-12 right-4 z-20 bg-dark border border-white/10 rounded-xl p-3 shadow-xl">
+                    <p class="text-xs text-gray-400 mb-2">滑点容忍度 (%)</p>
+                    <div class="flex gap-2">
+                        <button class="slippage-opt bg-gold/20 text-gold text-xs px-3 py-1 rounded hover:bg-gold/40" data-val="0.5">0.5%</button>
+                        <button class="slippage-opt bg-white/5 text-gray-300 text-xs px-3 py-1 rounded hover:bg-white/10" data-val="1">1%</button>
+                        <button class="slippage-opt bg-white/5 text-gray-300 text-xs px-3 py-1 rounded hover:bg-white/10" data-val="5">5%</button>
+                    </div>
+                    <input type="number" id="customSlippage" placeholder="自定义" class="w-full mt-2 bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white" />
                 </div>
+
+                <div class="space-y-2 mt-2">
+                    <div class="bg-black/30 rounded-xl p-3 flex justify-between items-center border border-transparent hover:border-gold/30 transition">
+                        <input type="number" id="swapInAmount" placeholder="0.0" class="bg-transparent text-white text-lg outline-none w-full font-mono" />
+                        <span class="text-gray-400 text-sm font-bold flex items-center gap-1"><i class="fa-solid fa-coin"></i> TRX</span>
+                    </div>
+                    <div class="text-center text-gray-500 text-xs py-1">↓ 预计可得 ↓</div>
+                    <div class="bg-black/30 rounded-xl p-3 flex justify-between items-center border border-transparent hover:border-gold/30 transition">
+                        <input type="number" id="swapOutAmount" placeholder="0.0" class="bg-transparent text-gray-400 text-lg outline-none w-full font-mono" readonly />
+                        <span class="text-gold text-sm font-bold flex items-center gap-1"><i class="fa-solid fa-crown"></i> WZGL</span>
+                    </div>
+                </div>
+                <div class="text-[10px] text-gray-500 mt-2 text-center" id="priceInfo">实时价格：--</div>
+                <button id="swapBtn" class="glow-btn w-full mt-3 py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                    兑换
+                </button>
             </div>
-        </div>
-        
-        <div class="mt-6 border-t border-white/10 pt-4 text-center">
-                <p class="text-yellow-500/90 text-xs font-semibold flex items-center justify-center gap-1.5 mb-1">
-                    <i class="fa-solid fa-triangle-exclamation"></i> 安全警告：请务必核对上方合约地址！
-                </p>
-                <p class="text-gray-500 text-[10px] leading-relaxed">
-                本页面为开源社区前端，请确保您访问的是官方唯一网址：<br>
+
+            <button id="openTransferBtn" class="w-full py-3.5 rounded-xl font-bold text-dark bg-white/10 hover:bg-white/20 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> 转账 WZGL
+            </button>
+        </div><div class="mt-8 border-t border-white/10 pt-4 text-center relative z-10">
+            <p class="text-yellow-500/90 text-xs font-semibold flex items-center justify-center gap-1.5 mb-1">
+                <i class="fa-solid fa-triangle-exclamation"></i> 安全警告：请务必核对上方合约地址！
+            </p>
+            <div class="mb-2 bg-black/30 border border-white/10 rounded-lg p-2 flex items-center justify-center gap-2">
+                <span class="text-gray-400 text-[10px]">官方唯一 CA:</span>
+                <span class="text-gold font-mono text-[10px] select-all">TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6</span>
+                <a href="https://tronscan.org/#/contract/TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6" target="_blank" class="text-gold text-[10px] hover:underline ml-1">🔍 验证</a>
+            </div>
+            <p class="text-gray-500 text-[10px] leading-relaxed">
+                本页面为官网唯一网址，请确保您访问的是官方唯一网址：<br>
                 <a href="https://wangzheguilai26.github.io/wangzheguilai/" target="_blank" class="text-gold font-bold hover:underline mt-1 inline-block">
                     🔗 点击访问官方 DApp
                 </a><br>
                 谨防钓鱼网站，任何人向你索要私钥都是诈骗！
             </p>
-                <p class="text-gray-600 text-[10px] mt-2">&copy; 2026 王者归来 (WZGL) Ecosystem. All rights reserved.</p>
+            <p class="text-gray-600 text-[10px] mt-2">&copy; 2026 王者归来 (WZGL) Ecosystem. All rights reserved.</p>
+        </div>
+    </div>
+
+    <div id="transferModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-card w-full max-w-sm p-6 relative transform scale-95 transition-transform duration-300">
+            <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition"><i class="fa-solid fa-times text-xl"></i></button>
+            <h3 class="text-white text-lg font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-paper-plane text-gold"></i> 转账 WZGL</h3>
+            <div class="space-y-4">
+                <input type="text" id="toAddress" placeholder="T 开头的 TRON 地址" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+                <input type="number" id="amount" placeholder="输入数量" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+                <button id="confirmTransferBtn" class="glow-btn w-full py-3.5 rounded-xl font-bold">确认转账</button>
             </div>
         </div>
-    </div><!-- 自定义弹窗通知 -->
+    </div>
+
     <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 translate-y-[-100px] bg-green-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg transition-all duration-300 z-50 flex items-center gap-2">
         <i class="fa-solid fa-circle-check"></i> <span id="toastMsg">操作成功</span>
     </div>
