@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>王者归来 | WZGL 生态</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tronweb/6.0.0/tronweb.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: '#FFD700',
+                        dark: '#0B0E14',
+                        card: '#151A25',
+                        accent: '#8A2BE2',
+                    },
+                    fontFamily: {
+                        orbit: ['Orbitron', 'sans-serif'],
+                        inter }
+: ['Inter', 'sans-serif'],
+                    }
+                       }
+            }
+    </script>
+    <style>
+        body {
+            background-color: #0B0E14;
+            background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.15), transparent 25%),
+                              radial-gradient(circle at 85% 30%, rgba(255, 215, 0, 0.1), transparent 25%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        .glass-card {
+            background: rgba(21, 26, 37, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        .glow-btn {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #0B0E14;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .glow-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+        .glow-btn:disabled {
+            background: #333;
+            color: #666;
+            box-shadow: none;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .input-field {
+            background: rgba(11, 14, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+    </style>
+</head><body class="font-inter p-4">
+
+    <div class="w-full max-w-md glass-card p-6 md:p-8 relative overflow-hidden">
+        <!-- 装饰背景 -->
+        <div class="absolute -top-20 -right-20 w-40 h-40 bg-gold rounded-full filter blur-[80px] opacity-20"></div>
+        <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-accent rounded-full filter blur-[80px] opacity-20"></div>
+
+        <!-- 头部区域 -->
+        <div class="text-center relative z-10">
+            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-gold to-orange-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-gold/20">
+                <i class="fa-solid fa-crown text-3xl text-dark"></i>
+            </div>
+            <h1 class="font-orbit text-3xl font-bold text-gold glow-text tracking-wider">王者归来</h1>
+            <p class="text-gray-400 text-sm mt-1 tracking-widest">WZGL TOKEN</p>
+            <div class="mt-2 bg-black/30 border border-white/10 rounded-lg p-2 flex items-center justify-center gap-2 cursor-pointer hover:bg-black/50 transition" id="copyContract" title="点击复制合约地址">
+                <span class="text-gray-400 text-xs">合约: </span>
+                <span class="text-gold font-mono text-xs">TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6</span>
+                <i class="fa-regular fa-copy text-gold text-xs"></i>
+            </div>
+            <div class="mt-3 inline-flex items-center bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
+                <span class="text-green-500 text-xs font-semibold">TRON Mainnet</span>
+            </div>
+        </div><!-- 连接钱包按钮 -->
+        <button id="connectBtn" class="glow-btn w-full mt-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wallet"></i> 连接 TronLink 钱包
+        </button>
+
+        <!-- 钱包信息面板 -->
+        <div id="walletPanel" class="hidden mt-6 space-y-4">
+            <div class="bg-dark/50 rounded-2xl p-4 border border-white/5">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-400 text-sm">我的地址</span>
+                    <span class="text-white text-sm font-mono bg-white/10 px-2 py-0.5 rounded cursor-pointer hover:bg-white/20 transition" id="copyAddress" title="点击复制">
+                        <span id="walletAddress">--</span> <i class="fa-regular fa-copy ml-1"></i>
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-400 text-sm">我的余额</span>
+                    <span class="text-gold font-orbit text-xl font-bold glow-text" id="walletBalance">0 WZGL</span>
+                </div>
+            </div><!-- 转账功能区 -->
+            <div class="bg-dark/50 rounded-2xl p-5 border border-white/5 mt-4">
+                <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane text-gold"></i> 转账 WZGL
+                </h3>
+                <div class="space-y-3">
+                    <input type="text" id="toAddress" placeholder="接收方地址 (T开头)" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+                    <input type="number" id="amount" placeholder="转账数量" class="input-field w-full px-4 py-3 rounded-xl text-sm">
+                    <button id="transferBtn" class="w-full py-3 mt-2 rounded-xl font-bold text-dark bg-gold hover:bg-yellow-400 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        确认转账
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 border-t border-white/10 pt-4 text-center">
+                <p class="text-yellow-500/90 text-xs font-semibold flex items-center justify-center gap-1.5 mb-1">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 安全警告：请务必核对上方合约地址！
+                </p>
+                <p class="text-gray-500 text-[10px] leading-relaxed">
+                本页面为开源社区前端，请确保您访问的是官方唯一网址：<br>
+                <a href="https://你的GitHub用户名.github.io/你的仓库名/" target="_blank" class="text-gold font-bold hover:underline mt-1 inline-block">
+                    🔗 点击访问官方 DApp
+                </a><br>
+                谨防钓鱼网站，任何人向你索要私钥都是诈骗！
+            </p>
+                <p class="text-gray-600 text-[10px] mt-2">&copy; 2026 王者归来 (WZGL) Ecosystem. All rights reserved.</p>
+            </div>
+        </div>
+    </div><!-- 自定义弹窗通知 -->
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 translate-y-[-100px] bg-green-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg transition-all duration-300 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-check"></i> <span id="toastMsg">操作成功</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
