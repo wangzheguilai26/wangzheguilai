@@ -18,6 +18,7 @@ function showToast(message, isError = false) {
 
 function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 
+// 地址校验函数
 function validateTronAddress(addr) {
     if (!addr) return { ok: false, reason: "地址不能为空" };
     if (addr.startsWith('0x')) return { ok: false, reason: "不支援 0x 开头的以太坊地址" };
@@ -36,27 +37,41 @@ function toggleModal(show) {
     else { modal.classList.add('opacity-0'); inner.classList.add('scale-95'); setTimeout(() => { modal.classList.add('hidden'); }, 300); }
 }
 
+// 池子状态检查
 async function checkPairStatus() {
     if (!routerContract) return;
     const btn = document.getElementById('swapBtn');
     try {
         const pairAddress = await routerContract.getPair(WTRX_ADDRESS, CONTRACT_ADDRESS).call();
-        if (!pairAddress || pairAddress === BURN_ADDRESS || pairAddress === '0x0000000000000000000000000000000000000000') { disableSwapBtn('池子未开放'); return; }
+        if (!pairAddress || pairAddress === BURN_ADDRESS || pairAddress === '0x0000000000000000000000000000000000000000') {
+            disableSwapBtn('池子未开放');
+            return;
+        }
         const pairContract = await tronWeb.contract().at(pairAddress);
         const reserves = await pairContract.getReserves().call();
-        if (reserves[0].toString() === '0' || reserves[1].toString() === '0') { disableSwapBtn('池子未开放'); }
-        else { btn.disabled = false; btn.innerText = '兑换'; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
-    } catch (e) { disableSwapBtn('池子未开放'); }
+        if (reserves[0].toString() === '0' || reserves[1].toString() === '0') {
+            disableSwapBtn('池子未开放');
+        } else {
+            btn.disabled = false;
+            btn.innerText = '兑换';
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    } catch (e) {
+        disableSwapBtn('池子未开放');
+    }
 }
 
 function disableSwapBtn(text) {
     const btn = document.getElementById('swapBtn');
-    btn.disabled = true; btn.innerText = text;
+    btn.disabled = true;
+    btn.innerText = text;
     btn.classList.add('opacity-50', 'cursor-not-allowed');
 }
 
 window.addEventListener('load', async () => {
-    if (window.tronLink) { window.addEventListener('message', (e) => { if (e.data.message && e.data.message.action === "setAccount") checkWallet(); }); }
+    if (window.tronLink) {
+        window.addEventListener('message', (e) => { if (e.data.message && e.data.message.action === "setAccount") checkWallet(); });
+    }
 });
 
 document.getElementById('connectBtn').addEventListener('click', async () => {
@@ -80,7 +95,8 @@ async function checkWallet() {
         document.getElementById('walletBalance').innerText = formatNumber(tronWeb.BigNumber(balance).div(10 ** 18).toString()) + ' WZGL';
         const trxBal = await tronWeb.trx.getBalance(userAddress);
         document.getElementById('trxBalance').innerText = formatNumber(tronWeb.BigNumber(trxBal).div(10 ** 6).toString()) + ' TRX';
-        updatePriceInfo(); checkPairStatus();
+        updatePriceInfo();
+        checkPairStatus();
         if (pairCheckTimer) clearInterval(pairCheckTimer);
         pairCheckTimer = setInterval(checkPairStatus, 60000);
     } catch (error) { console.error("数据获取失败:", error); }
@@ -94,7 +110,9 @@ async function updatePriceInfo() {
         const amounts = await routerContract.getAmountsOut(oneTrx, path).call();
         const price = tronWeb.BigNumber(amounts[1]).div(10 ** 18).toString();
         document.getElementById('priceInfo').innerText = `实时价格：1 TRX ≈ ${parseFloat(price).toFixed(4)} WZGL`;
-    } catch (e) { document.getElementById('priceInfo').innerText = `实时价格：池子未建立，无法读取`; }
+    } catch (e) {
+        document.getElementById('priceInfo').innerText = `实时价格：池子未建立，无法读取`;
+    }
 }
 
 document.getElementById('slippageBtn').addEventListener('click', () => { document.getElementById('slippagePanel').classList.toggle('hidden'); });
@@ -131,22 +149,33 @@ document.getElementById('swapBtn').addEventListener('click', async () => {
         const amountOutMin = tronWeb.BigNumber(amounts[1]).times(100 - currentSlippage).div(100).toString();
         const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
         await routerContract.swapExactETHForTokens(amountOutMin, path, userAddress, deadline).send({ feeLimit: 150000000, callValue: amountIn });
-        showToast('兑换成功！'); await checkWallet(); document.getElementById('swapInAmount').value = ''; document.getElementById('swapOutAmount').value = '';
-    } catch (error) { console.error("兑换失败:", error); showToast('兑换失败！请确保池子有流动性且滑点合适。', true); }
-    finally { btn.innerText = '兑换'; checkPairStatus(); }
+        showToast('兑换成功！');
+        await checkWallet(); document.getElementById('swapInAmount').value = ''; document.getElementById('swapOutAmount').value = '';
+    } catch (error) { 
+        console.error("兑换失败:", error); showToast('兑换失败！请确保池子有流动性且滑点合适。', true); 
+    } finally { 
+        btn.innerText = '兑换'; checkPairStatus(); 
+    }
 });
 
 document.getElementById('openTransferBtn').addEventListener('click', () => toggleModal(true));
 document.getElementById('closeModalBtn').addEventListener('click', () => toggleModal(false));
 
+// 输入框失去焦点时立即校验地址
 document.getElementById('toAddress').addEventListener('blur', function() {
     const addr = this.value.trim();
     const errorMsg = document.getElementById('addressErrorMsg');
     const confirmBtn = document.getElementById('confirmTransferBtn');
-    if (!addr) { errorMsg.classList.add('hidden'); confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed'); return; }
+    if (!addr) {
+        errorMsg.classList.add('hidden'); confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed'); return;
+    }
     const check = validateTronAddress(addr);
-    if (!check.ok) { errorMsg.innerText = "❌ " + check.reason; errorMsg.classList.remove('hidden'); confirmBtn.disabled = true; confirmBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
-    else { errorMsg.classList.add('hidden'); confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+    if (!check.ok) {
+        errorMsg.innerText = "❌ " + check.reason; errorMsg.classList.remove('hidden');
+        confirmBtn.disabled = true; confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        errorMsg.classList.add('hidden'); confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
 });
 
 document.getElementById('confirmTransferBtn').addEventListener('click', async () => {
@@ -157,7 +186,8 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
     if (!check.ok) { showToast(check.reason, true); return; }
     const btn = document.getElementById('confirmTransferBtn'); 
     btn.innerText = '转账中...'; btn.disabled = true;
-            let isContract = false;
+    try {
+        let isContract = false;
         try {
             isContract = await tronWeb.isContract(toAddress);
         } catch (e) {
@@ -171,6 +201,9 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
         const transferAmount = tronWeb.BigNumber(amount).times(10 ** 18).toString();
         await contract.transfer(toAddress, transferAmount).send({ feeLimit: 50000000, callValue: 0 });
         showToast('转账成功！'); await checkWallet(); toggleModal(false);
-    } catch (error) { console.error("转账失败:", error); showToast('转账失败！请确保有足够的 TRX 支付手续费。', true); }
-    finally { btn.innerText = '确认转账'; btn.disabled = false; }
+    } catch (error) { 
+        console.error("转账失败:", error); showToast('转账失败！请确保有足够的 TRX 支付手续费。', true); 
+    } finally { 
+        btn.innerText = '确认转账'; btn.disabled = false; 
+    }
 });
