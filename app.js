@@ -198,7 +198,8 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
                 btn.innerText = '确认转账'; btn.disabled = false; return;
             }
         }
-        const transferAmount = tronWeb.BigNumber(amount).times(10 ** 18).toString();
+        // 🛡️ 终极修复：用完整字符串代替 10**18，避免科学计数法
+        const transferAmount = tronWeb.BigNumber(amount).times('1000000000000000000').toString();
         await contract.transfer(toAddress, transferAmount).send({ feeLimit: 50000000, callValue: 0 });
         showToast('转账成功！'); await checkWallet(); toggleModal(false);
     } catch (error) { 
