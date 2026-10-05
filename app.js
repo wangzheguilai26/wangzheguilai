@@ -157,9 +157,17 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
     if (!check.ok) { showToast(check.reason, true); return; }
     const btn = document.getElementById('confirmTransferBtn'); 
     btn.innerText = '转账中...'; btn.disabled = true;
-    try {
-        const isContract = await tronWeb.isContract(toAddress);
-        if (isContract) { if (!confirm("⚠️ 您正在向一个智能合约地址转账！\n\n确认要继续吗？")) { btn.innerText = '确认转账'; btn.disabled = false; return; } }
+            let isContract = false;
+        try {
+            isContract = await tronWeb.isContract(toAddress);
+        } catch (e) {
+            console.log("跳过合约地址检查（当前版本不支持该接口）");
+        }
+        if (isContract) {
+            if (!confirm("⚠️ 您正在向一个智能合约地址转账！\n\n确认要继续吗？")) {
+                btn.innerText = '确认转账'; btn.disabled = false; return;
+            }
+        }
         const transferAmount = tronWeb.BigNumber(amount).times(10 ** 18).toString();
         await contract.transfer(toAddress, transferAmount).send({ feeLimit: 50000000, callValue: 0 });
         showToast('转账成功！'); await checkWallet(); toggleModal(false);
