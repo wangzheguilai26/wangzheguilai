@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>王者归来 | WZGL 生态</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
-    <!-- 若 CDN 加载失败，请把下面这行替换为：<script src="https://cdn.bootcdn.net/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"></script> -->
+    <link rel="icon" href="data:,"> <!-- 修复 favicon 404 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tronweb/6.0.0/tronweb.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -29,6 +28,7 @@
     <div class="w-full max-w-md glass-card p-6 md:p-8 relative overflow-hidden">
         <div class="absolute -top-20 -right-20 w-40 h-40 bg-gold rounded-full filter blur-[80px] opacity-20"></div>
         <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-accent rounded-full filter blur-[80px] opacity-20"></div>
+
         <div class="text-center relative z-10">
             <div class="w-16 h-16 mx-auto bg-gradient-to-br from-gold to-orange-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-gold/20">
                 <i class="fa-solid fa-crown text-3xl text-dark"></i>
@@ -40,9 +40,11 @@
                 <span class="text-green-500 text-xs font-semibold">TRON Mainnet</span>
             </div>
         </div>
+
         <button id="connectBtn" class="glow-btn w-full mt-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
             <i class="fa-solid fa-wallet"></i> 连接 TronLink 钱包
         </button>
+
         <div id="walletPanel" class="hidden mt-6 space-y-4">
             <div class="bg-dark/50 rounded-2xl p-5 border border-white/5">
                 <div class="flex justify-between items-center mb-3">
@@ -60,11 +62,13 @@
                     <span class="text-white font-mono text-sm" id="trxBalance">0 TRX</span>
                 </div>
             </div>
+
             <div class="bg-dark/50 rounded-2xl p-5 border border-white/5 relative">
                 <h3 class="text-white font-semibold mb-3 flex items-center justify-between flex-wrap gap-2">
                     <span class="flex items-center gap-2"><i class="fa-solid fa-arrows-rotate text-gold"></i> 兑换 (Swap)</span>
                     <span class="text-xs text-gray-500 cursor-pointer hover:text-gold transition" id="slippageBtn">设置滑点 ⚙️</span>
                 </h3>
+                
                 <div id="slippagePanel" class="hidden absolute top-12 right-4 z-20 bg-dark border border-white/10 rounded-xl p-3 shadow-xl">
                     <p class="text-xs text-gray-400 mb-2">滑点容忍度 (%)</p>
                     <div class="flex gap-2">
@@ -74,6 +78,7 @@
                     </div>
                     <input type="number" id="customSlippage" placeholder="自定义" class="w-full mt-2 bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white" />
                 </div>
+
                 <div class="space-y-2 mt-2">
                     <div class="bg-black/30 rounded-xl p-3 flex justify-between items-center border border-transparent hover:border-gold/30 transition">
                         <input type="number" id="swapInAmount" placeholder="0.0" class="bg-transparent text-white text-lg outline-none w-full font-mono" />
@@ -90,13 +95,15 @@
                     池子未开放
                 </button>
             </div>
+
             <button id="openTransferBtn" class="w-full py-3.5 rounded-xl font-bold text-dark bg-white/10 hover:bg-white/20 transition flex items-center justify-center gap-2">
                 <i class="fa-solid fa-paper-plane"></i> 转账 WZGL
             </button>
         </div>
+
         <div class="mt-8 border-t border-white/10 pt-4 text-center relative z-10">
             <p class="text-yellow-500/90 text-xs font-semibold flex items-center justify-center gap-1.5 mb-1">
-                <i class="fa-solid fa-triangle-exclamation"></i> 安全警告：请务必核对下方合约地址！
+                <i class="fa-solid fa-triangle-exclamation"></i> 安全警告：请务必核对上方合约地址！
             </p>
             <div class="mb-2 bg-black/30 border border-white/10 rounded-lg p-2 flex items-center justify-center gap-2">
                 <span class="text-gray-400 text-[10px]">官方唯一 CA:</span>
@@ -104,12 +111,13 @@
                 <a href="https://tronscan.org/#/contract/TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6" target="_blank" class="text-gold text-[10px] hover:underline ml-1">🔍 验证</a>
             </div>
             <p class="text-gray-500 text-[10px] leading-relaxed">
-                本页面为前端，请确保您访问的是官方唯一网址。<br>
+                本页面为开源社区前端，请确保您访问的是官方唯一网址。<br>
                 谨防钓鱼网站，任何人向你索要私钥都是诈骗！
             </p>
             <p class="text-gray-600 text-[10px] mt-2">&copy; 2026 王者归来 (WZGL) Ecosystem. All rights reserved.</p>
         </div>
     </div>
+
     <div id="transferModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
         <div class="glass-card w-full max-w-sm p-6 relative transform scale-95 transition-transform duration-300">
             <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition"><i class="fa-solid fa-times text-xl"></i></button>
@@ -123,9 +131,11 @@
             </div>
         </div>
     </div>
+
     <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 translate-y-[-100px] bg-green-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg transition-all duration-300 z-50 flex items-center gap-2">
         <i class="fa-solid fa-circle-check"></i> <span id="toastMsg">操作成功</span>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
