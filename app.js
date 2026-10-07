@@ -2,7 +2,6 @@ const CONTRACT_ADDRESS = 'TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6';
 const ROUTER_ADDRESS = 'TNJVzGqKBWkJxJB5XYSqGAwUTV15U24pPq';
 const WTRX_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
 const BURN_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
-// 🌟 如果之后部署到公网，请替换为你的服务器地址
 const BACKEND_URL = 'http://localhost:3000'; 
 
 let tronWeb, contract, routerContract, userAddress;
@@ -24,30 +23,29 @@ function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
 }
 
-// 🌟 兼容所有环境的“最强复制函数”
+// 🌟 兼容所有环境的复制函数
 function copyTextToClipboard(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-        // 现代浏览器，在 HTTPS 或 localhost 环境下直接使用
-        return navigator.clipboard.writeText(text);
-    } else {
-        // 兼容 file:// 或 http://局域网IP 环境，使用旧版 textarea 方案
-        let textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        return new Promise((res, rej) => {
+    return new Promise((resolve, reject) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(resolve).catch(reject);
+        } else {
+            let textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
             try {
-                document.execCommand('copy') ? res() : rej();
+                document.execCommand('copy') ? resolve() : reject(new Error('execCommand failed'));
             } catch (e) {
-                rej(e);
+                reject(e);
+            } finally {
+                document.body.removeChild(textArea);
             }
-            textArea.remove();
-        });
-    }
+        }
+    });
 }
 
 function validateTronAddress(addr) {
@@ -146,12 +144,15 @@ async function checkWallet() {
     }
 }
 
-// 🌟 使用最强兼容函数绑定“复制地址”点击事件
+// 🌟 绑定复制事件
 document.getElementById('copyAddress').addEventListener('click', () => {
     if (!userAddress) { showToast('请先连接钱包', true); return; }
     copyTextToClipboard(userAddress)
         .then(() => showToast('地址已复制到剪贴板'))
-        .catch(() => showToast('复制失败，请手动长按复制', true));
+        .catch((err) => {
+            console.error('复制失败:', err);
+            showToast('复制失败，请手动长按复制', true);
+        });
 });
 
 async function updatePriceInfo() {
