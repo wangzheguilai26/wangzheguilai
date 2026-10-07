@@ -2,7 +2,7 @@ const CONTRACT_ADDRESS = 'TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6';
 const ROUTER_ADDRESS = 'TNJVzGqKBWkJxJB5XYSqGAwUTV15U24pPq';
 const WTRX_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
 const BURN_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
-// 🌟 如果你是用手机访问，localhost 是连不上的，请改成你电脑的局域网IP（如 http://192.168.1.5:3000）
+// 如果你是用手机访问，localhost 是连不上的，请改成你电脑的局域网IP（如 http://192.168.1.5:3000）
 const BACKEND_URL = 'http://localhost:3000'; 
 
 let tronWeb, contract, routerContract, userAddress;
@@ -19,12 +19,13 @@ function showToast(message, isError = false) {
     setTimeout(() => { toast.classList.replace('translate-y-0', 'translate-y-[-100px]'); }, 3000);
 }
 
-// 🌟 已修复：加入空值保护，防止后端返回异常时前端崩溃
+// 🌟 格式化数字
 function formatNumber(num) { 
     if (num === undefined || num === null || isNaN(num)) return '0'; 
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
 }
 
+// 🌟 地址校验
 function validateTronAddress(addr) {
     if (!addr) return { ok: false, reason: "地址不能为空" };
     if (addr.startsWith('0x')) return { ok: false, reason: "不支援 0x 开头的以太坊地址" };
@@ -77,15 +78,9 @@ window.addEventListener('load', async () => {
     if (window.tronLink) {
         window.addEventListener('message', (e) => { if (e.data.message && e.data.message.action === "setAccount") checkWallet(); });
     }
-
-    // 🌟 新增：每 30 秒自动查询一次余额（全自动刷新）
     setInterval(async () => {
-        // 只有连接了钱包，才去查，避免无意义的请求
-        if (userAddress && tronWeb) {
-            console.log("🔄 触发自动刷新余额...");
-            await checkWallet();
-        }
-    }, 30000); // 30000 毫秒 = 30 秒
+        if (userAddress && tronWeb) { await checkWallet(); }
+    }, 30000);
 });
 
 document.getElementById('connectBtn').addEventListener('click', async () => {
@@ -96,6 +91,7 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
     } catch (error) { showToast("连接钱包失败，请检查钱包是否解锁。", true); }
 });
 
+// 🌟 获取钱包余额与信息
 async function checkWallet() {
     if (!tronWeb || !tronWeb.defaultAddress.base58) return;
     userAddress = tronWeb.defaultAddress.base58;
@@ -114,10 +110,8 @@ async function checkWallet() {
             document.getElementById('walletBalance').innerText = formatNumber(result.data.wzglBalance) + ' WZGL';
             document.getElementById('trxBalance').innerText = formatNumber(result.data.trxBalance) + ' TRX';
         } else {
-            console.error("后端查询失败:", result.message || "数据格式不匹配");
             document.getElementById('walletBalance').innerText = '-- WZGL';
             document.getElementById('trxBalance').innerText = '-- TRX';
-            showToast('后端数据异常，请检查后端日志。', true);
         }
         
         updatePriceInfo();
@@ -125,10 +119,23 @@ async function checkWallet() {
         if (pairCheckTimer) clearInterval(pairCheckTimer);
         pairCheckTimer = setInterval(checkPairStatus, 60000);
     } catch (error) { 
-        console.error("请求后端失败:", error); 
         showToast('无法连接后端服务，请检查服务器是否启动！', true);
     }
 }
+
+// 🌟 修复：新增“复制地址”点击事件
+document.getElementById('copyAddress').addEventListener('click', () => {
+    if (userAddress) {
+        navigator.clipboard.writeText(userAddress).then(() => {
+            showToast('地址已复制到剪贴板');
+        }).catch(err => {
+            console.error('复制失败:', err);
+            showToast('复制失败，请手动长按复制', true);
+        });
+    } else {
+        showToast('请先连接钱包', true);
+    }
+});
 
 async function updatePriceInfo() {
     if (!routerContract) return;
@@ -180,7 +187,7 @@ document.getElementById('swapBtn').addEventListener('click', async () => {
         showToast('兑换成功！');
         await checkWallet(); document.getElementById('swapInAmount').value = ''; document.getElementById('swapOutAmount').value = '';
     } catch (error) { 
-        console.error("兑换失败:", error); showToast('兑换失败！请确保池子有流动性且滑点合适。', true); 
+        showToast('兑换失败！请确保池子有流动性且滑点合适。', true); 
     } finally { 
         btn.innerText = '兑换'; checkPairStatus(); 
     }
@@ -217,20 +224,17 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
         let isContract = false;
         try {
             isContract = await tronWeb.isContract(toAddress);
-        } catch (e) {
-            console.log("跳过合约地址检查");
-        }
+        } catch (e) { console.log("跳过合约地址检查"); }
         if (isContract) {
             if (!confirm("⚠️ 您正在向一个智能合约地址转账！\n\n确认要继续吗？")) {
                 btn.innerText = '确认转账'; btn.disabled = false; return;
             }
         }
-        // 🌟 避免科学计数法报错
         const transferAmount = tronWeb.BigNumber(amount).times('1000000000000000000').toString(); 
         await contract.transfer(toAddress, transferAmount).send({ feeLimit: 50000000, callValue: 0 });
         showToast('转账成功！'); await checkWallet(); toggleModal(false);
     } catch (error) { 
-        console.error("转账失败:", error); showToast('转账失败！请确保有足够的 TRX 支付手续费。', true); 
+        showToast('转账失败！请确保有足够的 TRX 支付手续费。', true); 
     } finally { 
         btn.innerText = '确认转账'; btn.disabled = false; 
     }
