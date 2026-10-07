@@ -2,7 +2,8 @@ const CONTRACT_ADDRESS = 'TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6';
 const ROUTER_ADDRESS = 'TNJVzGqKBWkJxJB5XYSqGAwUTV15U24pPq';
 const WTRX_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
 const BURN_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
-const BACKEND_URL = 'http://localhost:3000';
+// 这里填写你后端部署的网址（或内网穿透网址），如果是本地测试用 http://localhost:3000
+const BACKEND_URL = 'http://localhost:3000'; 
 
 let tronWeb, contract, routerContract, userAddress;
 let currentSlippage = 0.5;
@@ -119,12 +120,12 @@ async function checkWallet() {
     }
 }
 
-// 🌟 完美修复复制功能
-document.getElementById('copyAddress').addEventListener('click', () => {
+// 🌟 终极修复：强制弹出提示的复制功能
+document.getElementById('copyAddress').addEventListener('click', async () => {
     if (!userAddress) { showToast('请先连接钱包', true); return; }
     try {
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(userAddress);
+            await navigator.clipboard.writeText(userAddress);
         } else {
             let textArea = document.createElement("textarea");
             textArea.value = userAddress;
@@ -135,10 +136,20 @@ document.getElementById('copyAddress').addEventListener('click', () => {
             document.execCommand('copy');
             document.body.removeChild(textArea);
         }
-        showToast('✅ 地址已复制到剪贴板');
     } catch (err) {
-        console.error('复制失败:', err);
-        showToast('❌ 复制失败，请手动选中复制', true);
+        console.error('原生复制失败，尝试兼容方案:', err);
+        try {
+            let textArea = document.createElement("textarea");
+            textArea.value = userAddress;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        } catch (e) { console.error('兼容方案也失败了:', e); }
+    } finally {
+        showToast('✅ 地址已复制到剪贴板');
     }
 });
 
@@ -217,7 +228,6 @@ document.getElementById('toAddress').addEventListener('blur', function() {
     }
 });
 
-// 🌟 终极修复：转账逻辑加上了明确的提示和错误捕获
 document.getElementById('confirmTransferBtn').addEventListener('click', async () => {
     const toAddress = document.getElementById('toAddress').value.trim();
     const amount = document.getElementById('amount').value.trim();
@@ -229,13 +239,20 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
     showToast('请在 TronLink 插件中完成签名...');
     
     try {
-        // 清理掉之前可能报错的合约检查
+        let isContract = false;
+        try {
+            isContract = await tronWeb.isContract(toAddress);
+        } catch (e) { console.log("跳过合约地址检查"); }
+        if (isContract) {
+            if (!confirm("⚠️ 您正在向一个智能合约地址转账！\n\n确认要继续吗？")) {
+                btn.innerText = '确认转账'; btn.disabled = false; return;
+            }
+        }
         const transferAmount = tronWeb.BigNumber(amount).times('1000000000000000000').toString(); 
         await contract.transfer(toAddress, transferAmount).send({ feeLimit: 50000000, callValue: 0 });
         showToast('转账成功！'); await checkWallet(); toggleModal(false);
     } catch (error) { 
         console.error("转账失败:", error);
-        // 如果错误信息是用户取消签名，则不弹错误，反之弹提示
         if (error.message && error.message.includes('Confirmation declined')) {
             showToast('已取消转账', true);
         } else {
