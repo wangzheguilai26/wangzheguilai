@@ -2,7 +2,7 @@ const CONTRACT_ADDRESS = 'TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6';
 const ROUTER_ADDRESS = 'TNJVzGqKBWkJxJB5XYSqGAwUTV15U24pPq';
 const WTRX_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
 const BURN_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
-// 如果你是用手机访问，localhost 是连不上的，请改成你电脑的局域网IP（如 http://192.168.1.5:3000）
+// 🌟 如果之后部署到公网，请替换为你的服务器地址
 const BACKEND_URL = 'http://localhost:3000'; 
 
 let tronWeb, contract, routerContract, userAddress;
@@ -19,13 +19,37 @@ function showToast(message, isError = false) {
     setTimeout(() => { toast.classList.replace('translate-y-0', 'translate-y-[-100px]'); }, 3000);
 }
 
-// 🌟 格式化数字
 function formatNumber(num) { 
     if (num === undefined || num === null || isNaN(num)) return '0'; 
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
 }
 
-// 🌟 地址校验
+// 🌟 兼容所有环境的“最强复制函数”
+function copyTextToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        // 现代浏览器，在 HTTPS 或 localhost 环境下直接使用
+        return navigator.clipboard.writeText(text);
+    } else {
+        // 兼容 file:// 或 http://局域网IP 环境，使用旧版 textarea 方案
+        let textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        return new Promise((res, rej) => {
+            try {
+                document.execCommand('copy') ? res() : rej();
+            } catch (e) {
+                rej(e);
+            }
+            textArea.remove();
+        });
+    }
+}
+
 function validateTronAddress(addr) {
     if (!addr) return { ok: false, reason: "地址不能为空" };
     if (addr.startsWith('0x')) return { ok: false, reason: "不支援 0x 开头的以太坊地址" };
@@ -91,7 +115,6 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
     } catch (error) { showToast("连接钱包失败，请检查钱包是否解锁。", true); }
 });
 
-// 🌟 获取钱包余额与信息
 async function checkWallet() {
     if (!tronWeb || !tronWeb.defaultAddress.base58) return;
     userAddress = tronWeb.defaultAddress.base58;
@@ -123,18 +146,12 @@ async function checkWallet() {
     }
 }
 
-// 🌟 修复：新增“复制地址”点击事件
+// 🌟 使用最强兼容函数绑定“复制地址”点击事件
 document.getElementById('copyAddress').addEventListener('click', () => {
-    if (userAddress) {
-        navigator.clipboard.writeText(userAddress).then(() => {
-            showToast('地址已复制到剪贴板');
-        }).catch(err => {
-            console.error('复制失败:', err);
-            showToast('复制失败，请手动长按复制', true);
-        });
-    } else {
-        showToast('请先连接钱包', true);
-    }
+    if (!userAddress) { showToast('请先连接钱包', true); return; }
+    copyTextToClipboard(userAddress)
+        .then(() => showToast('地址已复制到剪贴板'))
+        .catch(() => showToast('复制失败，请手动长按复制', true));
 });
 
 async function updatePriceInfo() {
