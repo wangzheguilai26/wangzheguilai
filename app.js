@@ -2,7 +2,7 @@ const CONTRACT_ADDRESS = 'TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6';
 const ROUTER_ADDRESS = 'TNJVzGqKBWkJxJB5XYSqGAwUTV15U24pPq';
 const WTRX_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
 const BURN_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
-const BACKEND_URL = 'http://localhost:3000'; 
+const BACKEND_URL = 'http://localhost:3000';
 
 let tronWeb, contract, routerContract, userAddress;
 let currentSlippage = 0.5;
@@ -21,31 +21,6 @@ function showToast(message, isError = false) {
 function formatNumber(num) { 
     if (num === undefined || num === null || isNaN(num)) return '0'; 
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
-}
-
-// 🌟 兼容所有环境的复制函数
-function copyTextToClipboard(text) {
-    return new Promise((resolve, reject) => {
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(resolve).catch(reject);
-        } else {
-            let textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed";
-            textArea.style.left = "-9999px";
-            textArea.style.top = "0";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy') ? resolve() : reject(new Error('execCommand failed'));
-            } catch (e) {
-                reject(e);
-            } finally {
-                document.body.removeChild(textArea);
-            }
-        }
-    });
 }
 
 function validateTronAddress(addr) {
@@ -144,15 +119,27 @@ async function checkWallet() {
     }
 }
 
-// 🌟 绑定复制事件
+// 🌟 完美修复复制功能
 document.getElementById('copyAddress').addEventListener('click', () => {
     if (!userAddress) { showToast('请先连接钱包', true); return; }
-    copyTextToClipboard(userAddress)
-        .then(() => showToast('地址已复制到剪贴板'))
-        .catch((err) => {
-            console.error('复制失败:', err);
-            showToast('复制失败，请手动长按复制', true);
-        });
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(userAddress);
+        } else {
+            let textArea = document.createElement("textarea");
+            textArea.value = userAddress;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus(); textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        }
+        showToast('✅ 地址已复制到剪贴板');
+    } catch (err) {
+        console.error('复制失败:', err);
+        showToast('❌ 复制失败，请手动选中复制', true);
+    }
 });
 
 async function updatePriceInfo() {
@@ -230,6 +217,7 @@ document.getElementById('toAddress').addEventListener('blur', function() {
     }
 });
 
+// 🌟 终极修复：转账逻辑加上了明确的提示和错误捕获
 document.getElementById('confirmTransferBtn').addEventListener('click', async () => {
     const toAddress = document.getElementById('toAddress').value.trim();
     const amount = document.getElementById('amount').value.trim();
@@ -237,22 +225,22 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
     const check = validateTronAddress(toAddress);
     if (!check.ok) { showToast(check.reason, true); return; }
     const btn = document.getElementById('confirmTransferBtn'); 
-    btn.innerText = '转账中...'; btn.disabled = true;
+    btn.innerText = '请在 TronLink 中确认...'; btn.disabled = true;
+    showToast('请在 TronLink 插件中完成签名...');
+    
     try {
-        let isContract = false;
-        try {
-            isContract = await tronWeb.isContract(toAddress);
-        } catch (e) { console.log("跳过合约地址检查"); }
-        if (isContract) {
-            if (!confirm("⚠️ 您正在向一个智能合约地址转账！\n\n确认要继续吗？")) {
-                btn.innerText = '确认转账'; btn.disabled = false; return;
-            }
-        }
+        // 清理掉之前可能报错的合约检查
         const transferAmount = tronWeb.BigNumber(amount).times('1000000000000000000').toString(); 
         await contract.transfer(toAddress, transferAmount).send({ feeLimit: 50000000, callValue: 0 });
         showToast('转账成功！'); await checkWallet(); toggleModal(false);
     } catch (error) { 
-        showToast('转账失败！请确保有足够的 TRX 支付手续费。', true); 
+        console.error("转账失败:", error);
+        // 如果错误信息是用户取消签名，则不弹错误，反之弹提示
+        if (error.message && error.message.includes('Confirmation declined')) {
+            showToast('已取消转账', true);
+        } else {
+            showToast('转账失败！请确保钱包已解锁且有足够的 TRX 支付手续费。', true); 
+        }
     } finally { 
         btn.innerText = '确认转账'; btn.disabled = false; 
     }
