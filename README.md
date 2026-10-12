@@ -1,6 +1,9 @@
 <div align="center">
 
-# 👑 王者归来 (WZGL)
+<div align="center">
+  <img src="logo.png" alt="王者归来 Logo" width="120" />
+  <h1>王者归来 (WZGL)</h1>
+</div>)
 
 **The Return of the King - 波场 TRON 上完全去中心化的社区代币**
 
