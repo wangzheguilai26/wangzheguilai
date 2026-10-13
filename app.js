@@ -73,15 +73,28 @@ async function checkWallet() {
     document.getElementById('connectBtn').classList.add('hidden');
     contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
     routerContract = await tronWeb.contract().at(ROUTER_ADDRESS);
+
+    // 👇 1. 从本地后端请求 WZGL 余额（新增，让CMD显示日志）
     try {
-        const balance = await contract.balanceOf(userAddress).call();
-        document.getElementById('walletBalance').innerText = formatNumber(tronWeb.BigNumber(balance).div(10 ** 18).toString()) + ' WZGL';
-        const trxBal = await tronWeb.trx.getBalance(userAddress);
-        document.getElementById('trxBalance').innerText = formatNumber(tronWeb.BigNumber(trxBal).div(10 ** 6).toString()) + ' TRX';
-        updatePriceInfo(); checkPairStatus();
-        if (pairCheckTimer) clearInterval(pairCheckTimer);
-        pairCheckTimer = setInterval(checkPairStatus, 60000);
-    } catch (error) { console.error("数据获取失败:", error); }
+        const res = await fetch(`http://localhost:3000/api/wzgl-balance?address=${userAddress}`);
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('walletBalance').innerText = formatNumber(data.data.wzglBalance) + ' WZGL';
+        }
+    } catch (e) { console.log("请求 WZGL 余额失败", e); }
+
+    // 👇 2. 从本地后端请求 TRX 余额
+    try {
+        const res = await fetch(`http://localhost:3000/api/balance?address=${userAddress}`);
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('trxBalance').innerText = formatNumber(data.data.trxBalance) + ' TRX';
+        }
+    } catch (e) { console.log("请求 TRX 余额失败", e); }
+
+    updatePriceInfo(); checkPairStatus();
+    if (pairCheckTimer) clearInterval(pairCheckTimer);
+    pairCheckTimer = setInterval(checkPairStatus, 60000);
 }
 
 async function updatePriceInfo() {
@@ -150,7 +163,7 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
         const isContract = await tronWeb.isContract(toAddress);
         if (isContract) { if (!confirm("⚠️ 您正在向一个智能合约地址转账！\n\n确认要继续吗？")) { btn.innerText = '确认转账'; btn.disabled = false; return; } }
         const transferAmount = tronWeb.BigNumber(amount).times(10 ** 18).toString();
-        await contract.transfer(toAddress, transferAmount).send({ feeLimit: 50000000, callValue: 0 });
+        await contract.transfer(toAddress, transferAmount).send({ feeLimit: 20000000, callValue: 0 });
         showToast('转账成功！'); await checkWallet(); toggleModal(false);
     } catch (error) { showToast('转账失败！请确保有足够的 TRX 支付手续费。', true); } finally { btn.innerText = '确认转账'; btn.disabled = false; }
 });
