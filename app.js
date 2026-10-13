@@ -2,6 +2,7 @@ const CONTRACT_ADDRESS = 'TXtd1BHbhsPKdVZfBS9HwPPQRebPqGzUK6';
 const ROUTER_ADDRESS = 'TNJVzGqKBWkJxJB5XYSqGAwUTV15U24pPq';
 const WTRX_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
 const BURN_ADDRESS = 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
+
 let tronWeb, contract, routerContract, userAddress;
 let currentSlippage = 0.5;
 let pairCheckTimer = null;
@@ -16,11 +17,33 @@ function showToast(message, isError = false) {
     setTimeout(() => { toast.classList.replace('translate-y-0', 'translate-y-[-100px]'); }, 3000);
 }
 
-function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+function formatNumber(num) { 
+    if (num === undefined || num === null || isNaN(num)) return '0'; 
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
+}
+
+// 🌟 完美兼容的复制函数
+function copyTextToClipboard(text) {
+    return new Promise((resolve, reject) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(resolve).catch(reject);
+        } else {
+            let textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus(); textArea.select();
+            try { document.execCommand('copy') ? resolve() : reject(new Error('execCommand failed')); }
+            catch (e) { reject(e); }
+            finally { document.body.removeChild(textArea); }
+        }
+    });
+}
 
 function validateTronAddress(addr) {
     if (!addr) return { ok: false, reason: "地址不能为空" };
-    if (addr.startsWith('0x')) return { ok: false, reason: "不支持 0x 开头的以太坊地址" };
+    if (addr.startsWith('0x')) return { ok: false, reason: "不支援 0x 开头的以太坊地址" };
     const tronRegex = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
     if (!tronRegex.test(addr)) return { ok: false, reason: "TRON 地址格式不正确（应为 T 开头 34 位）" };
     if (addr === BURN_ADDRESS) return { ok: false, reason: "不能向黑洞地址/零地址转账" };
@@ -41,20 +64,38 @@ async function checkPairStatus() {
     const btn = document.getElementById('swapBtn');
     try {
         const pairAddress = await routerContract.getPair(WTRX_ADDRESS, CONTRACT_ADDRESS).call();
-        if (!pairAddress || pairAddress === BURN_ADDRESS || pairAddress === '0x0000000000000000000000000000000000000000') { disableSwapBtn('池子未开放'); return; }
+        if (!pairAddress || pairAddress === BURN_ADDRESS || pairAddress === '0x0000000000000000000000000000000000000000') {
+            disableSwapBtn('池子未开放');
+            return;
+        }
         const pairContract = await tronWeb.contract().at(pairAddress);
         const reserves = await pairContract.getReserves().call();
-        if (reserves[0].toString() === '0' || reserves[1].toString() === '0') { disableSwapBtn('池子未开放'); }
-        else { btn.disabled = false; btn.innerText = '兑换'; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
-    } catch (e) { disableSwapBtn('池子未开放'); }
+        if (reserves[0].toString() === '0' || reserves[1].toString() === '0') {
+            disableSwapBtn('池子未开放');
+        } else {
+            btn.disabled = false;
+            btn.innerText = '兑换';
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    } catch (e) {
+        disableSwapBtn('池子未开放');
+    }
 }
+
 function disableSwapBtn(text) {
     const btn = document.getElementById('swapBtn');
-    btn.disabled = true; btn.innerText = text; btn.classList.add('opacity-50', 'cursor-not-allowed');
+    btn.disabled = true;
+    btn.innerText = text;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
 }
 
 window.addEventListener('load', async () => {
-    if (window.tronLink) { window.addEventListener('message', (e) => { if (e.data.message && e.data.message.action === "setAccount") checkWallet(); }); }
+    if (window.tronLink) {
+        window.addEventListener('message', (e) => { if (e.data.message && e.data.message.action === "setAccount") checkWallet(); });
+    }
+    setInterval(async () => {
+        if (userAddress && tronWeb) { await checkWallet(); }
+    }, 30000);
 });
 
 document.getElementById('connectBtn').addEventListener('click', async () => {
@@ -65,37 +106,47 @@ document.getElementById('connectBtn').addEventListener('click', async () => {
     } catch (error) { showToast("连接钱包失败，请检查钱包是否解锁。", true); }
 });
 
+// 🌟 回退：直接连波场节点（保证手机和电脑都能用）
 async function checkWallet() {
     if (!tronWeb || !tronWeb.defaultAddress.base58) return;
     userAddress = tronWeb.defaultAddress.base58;
     document.getElementById('walletAddress').innerText = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
     document.getElementById('walletPanel').classList.remove('hidden');
     document.getElementById('connectBtn').classList.add('hidden');
+
     contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
     routerContract = await tronWeb.contract().at(ROUTER_ADDRESS);
-
-    // 👇 1. 从本地后端请求 WZGL 余额（新增，让CMD显示日志）
+    
     try {
-        const res = await fetch(`http://localhost:3000/api/wzgl-balance?address=${userAddress}`);
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById('walletBalance').innerText = formatNumber(data.data.wzglBalance) + ' WZGL';
-        }
-    } catch (e) { console.log("请求 WZGL 余额失败", e); }
-
-    // 👇 2. 从本地后端请求 TRX 余额
-    try {
-        const res = await fetch(`http://localhost:3000/api/balance?address=${userAddress}`);
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById('trxBalance').innerText = formatNumber(data.data.trxBalance) + ' TRX';
-        }
-    } catch (e) { console.log("请求 TRX 余额失败", e); }
-
-    updatePriceInfo(); checkPairStatus();
-    if (pairCheckTimer) clearInterval(pairCheckTimer);
-    pairCheckTimer = setInterval(checkPairStatus, 60000);
+        // 查询 WZGL 余额
+        const balance = await contract.balanceOf(userAddress).call();
+        document.getElementById('walletBalance').innerText = formatNumber(tronWeb.BigNumber(balance).div(10 ** 18).toString()) + ' WZGL';
+        
+        // 查询 TRX 余额
+        const trxBal = await tronWeb.trx.getBalance(userAddress);
+        document.getElementById('trxBalance').innerText = formatNumber(tronWeb.BigNumber(trxBal).div(10 ** 6).toString()) + ' TRX';
+        
+        updatePriceInfo();
+        checkPairStatus();
+        if (pairCheckTimer) clearInterval(pairCheckTimer);
+        pairCheckTimer = setInterval(checkPairStatus, 60000);
+    } catch (error) { 
+        console.error("数据获取失败:", error); 
+        showToast('网络节点繁忙，请稍后重试', true);
+    }
 }
+
+// 🌟 强制弹出提示的复制功能
+document.getElementById('copyAddress').addEventListener('click', async () => {
+    if (!userAddress) { showToast('请先连接钱包', true); return; }
+    try {
+        await copyTextToClipboard(userAddress);
+        showToast('✅ 地址已复制到剪贴板');
+    } catch (err) {
+        console.error('复制失败:', err);
+        showToast('❌ 复制失败，请手动选中复制', true);
+    }
+});
 
 async function updatePriceInfo() {
     if (!routerContract) return;
@@ -105,11 +156,19 @@ async function updatePriceInfo() {
         const amounts = await routerContract.getAmountsOut(oneTrx, path).call();
         const price = tronWeb.BigNumber(amounts[1]).div(10 ** 18).toString();
         document.getElementById('priceInfo').innerText = `实时价格：1 TRX ≈ ${parseFloat(price).toFixed(4)} WZGL`;
-    } catch (e) { document.getElementById('priceInfo').innerText = `实时价格：池子未建立，无法读取`; }
+    } catch (e) {
+        document.getElementById('priceInfo').innerText = `实时价格：池子未建立，无法读取`;
+    }
 }
 
 document.getElementById('slippageBtn').addEventListener('click', () => { document.getElementById('slippagePanel').classList.toggle('hidden'); });
-document.querySelectorAll('.slippage-opt').forEach(btn => { btn.addEventListener('click', (e) => { currentSlippage = parseFloat(e.target.getAttribute('data-val')); document.getElementById('customSlippage').value = ''; showToast(`滑点已设置为 ${currentSlippage}%`); }); });
+document.querySelectorAll('.slippage-opt').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        currentSlippage = parseFloat(e.target.getAttribute('data-val'));
+        document.getElementById('customSlippage').value = '';
+        showToast(`滑点已设置为 ${currentSlippage}%`);
+    });
+});
 document.getElementById('customSlippage').addEventListener('input', (e) => { if(e.target.value) { currentSlippage = parseFloat(e.target.value); } });
 
 document.getElementById('swapInAmount').addEventListener('input', async (e) => {
@@ -120,14 +179,15 @@ document.getElementById('swapInAmount').addEventListener('input', async (e) => {
         const path = [WTRX_ADDRESS, CONTRACT_ADDRESS];
         const amounts = await routerContract.getAmountsOut(amountIn, path).call();
         document.getElementById('swapOutAmount').value = parseFloat(tronWeb.BigNumber(amounts[1]).div(10 ** 18).toString()).toFixed(4);
-    } catch (error) { console.log("价格预估失败"); }
+    } catch (error) { console.log("价格预估失败:", error); }
 });
 
 document.getElementById('swapBtn').addEventListener('click', async () => {
     const val = document.getElementById('swapInAmount').value;
     if (!val || val <= 0) { showToast('请输入兑换数量', true); return; }
     if (!routerContract) { showToast('请先连接钱包', true); return; }
-    const btn = document.getElementById('swapBtn'); btn.innerText = '兑换中...'; btn.disabled = true;
+    const btn = document.getElementById('swapBtn'); 
+    btn.innerText = '兑换中...'; btn.disabled = true;
     try {
         const amountIn = tronWeb.BigNumber(val).times(10 ** 6).toString();
         const path = [WTRX_ADDRESS, CONTRACT_ADDRESS];
@@ -135,8 +195,13 @@ document.getElementById('swapBtn').addEventListener('click', async () => {
         const amountOutMin = tronWeb.BigNumber(amounts[1]).times(100 - currentSlippage).div(100).toString();
         const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
         await routerContract.swapExactETHForTokens(amountOutMin, path, userAddress, deadline).send({ feeLimit: 150000000, callValue: amountIn });
-        showToast('兑换成功！'); await checkWallet(); document.getElementById('swapInAmount').value = ''; document.getElementById('swapOutAmount').value = '';
-    } catch (error) { showToast('兑换失败！请确保池子有流动性且滑点合适。', true); } finally { btn.innerText = '兑换'; checkPairStatus(); }
+        showToast('兑换成功！');
+        await checkWallet(); document.getElementById('swapInAmount').value = ''; document.getElementById('swapOutAmount').value = '';
+    } catch (error) { 
+        showToast('兑换失败！请确保池子有流动性且滑点合适。', true); 
+    } finally { 
+        btn.innerText = '兑换'; checkPairStatus(); 
+    }
 });
 
 document.getElementById('openTransferBtn').addEventListener('click', () => toggleModal(true));
@@ -146,10 +211,16 @@ document.getElementById('toAddress').addEventListener('blur', function() {
     const addr = this.value.trim();
     const errorMsg = document.getElementById('addressErrorMsg');
     const confirmBtn = document.getElementById('confirmTransferBtn');
-    if (!addr) { errorMsg.classList.add('hidden'); confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed'); return; }
+    if (!addr) {
+        errorMsg.classList.add('hidden'); confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed'); return;
+    }
     const check = validateTronAddress(addr);
-    if (!check.ok) { errorMsg.innerText = "❌ " + check.reason; errorMsg.classList.remove('hidden'); confirmBtn.disabled = true; confirmBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
-    else { errorMsg.classList.add('hidden'); confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+    if (!check.ok) {
+        errorMsg.innerText = "❌ " + check.reason; errorMsg.classList.remove('hidden');
+        confirmBtn.disabled = true; confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        errorMsg.classList.add('hidden'); confirmBtn.disabled = false; confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
 });
 
 document.getElementById('confirmTransferBtn').addEventListener('click', async () => {
@@ -158,12 +229,24 @@ document.getElementById('confirmTransferBtn').addEventListener('click', async ()
     if (!toAddress || !amount) { showToast('请输入接收地址和数量', true); return; }
     const check = validateTronAddress(toAddress);
     if (!check.ok) { showToast(check.reason, true); return; }
-    const btn = document.getElementById('confirmTransferBtn'); btn.innerText = '转账中...'; btn.disabled = true;
+    const btn = document.getElementById('confirmTransferBtn'); 
+    btn.innerText = '转账中...'; btn.disabled = true;
     try {
-        const isContract = await tronWeb.isContract(toAddress);
-        if (isContract) { if (!confirm("⚠️ 您正在向一个智能合约地址转账！\n\n确认要继续吗？")) { btn.innerText = '确认转账'; btn.disabled = false; return; } }
-        const transferAmount = tronWeb.BigNumber(amount).times(10 ** 18).toString();
-        await contract.transfer(toAddress, transferAmount).send({ feeLimit: 20000000, callValue: 0 });
+        let isContract = false;
+        try { isContract = await tronWeb.isContract(toAddress); } catch (e) { console.log("跳过合约地址检查"); }
+        if (isContract) {
+            if (!confirm("⚠️ 您正在向一个智能合约地址转账！\n\n确认要继续吗？")) {
+                btn.innerText = '确认转账'; btn.disabled = false; return;
+            }
+        }
+        // 🌟 避免科学计数法报错
+        const transferAmount = tronWeb.BigNumber(amount).times('1000000000000000000').toString(); 
+        await contract.transfer(toAddress, transferAmount).send({ feeLimit: 50000000, callValue: 0 });
         showToast('转账成功！'); await checkWallet(); toggleModal(false);
-    } catch (error) { showToast('转账失败！请确保有足够的 TRX 支付手续费。', true); } finally { btn.innerText = '确认转账'; btn.disabled = false; }
+    } catch (error) { 
+        console.error("转账失败:", error);
+        showToast('转账失败！请确保有足够的 TRX 支付手续费。', true); 
+    } finally { 
+        btn.innerText = '确认转账'; btn.disabled = false; 
+    }
 });
